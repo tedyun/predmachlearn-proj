@@ -5,13 +5,16 @@ author: "Taedong Yun"
 output: html_document
 ---
 
+Loding data.
 
 ```{r}
-summary(cars)
+library(caret)
+training <- read.csv("pml-training.csv")
+testing <- read.csv("pml-testing.csv")
 ```
 
 
-```{r, echo=FALSE}
-plot(cars)
+```{r}
+#modFit <- train(classe ~ ., data=training, method="rf")
 ```
 
