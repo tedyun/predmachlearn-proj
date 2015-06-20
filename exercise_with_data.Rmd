@@ -1,0 +1,17 @@
+---
+title: "Weight Lifting and Machine Learning - Using Data as Your Personal Trainer"
+author: "Taedong Yun"
+#date: "Saturday, June 20, 2015"
+output: html_document
+---
+
+
+```{r}
+summary(cars)
+```
+
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
