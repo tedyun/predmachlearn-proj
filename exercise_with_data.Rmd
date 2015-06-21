@@ -1,20 +1,94 @@
 ---
 title: "Weight Lifting and Machine Learning - Using Data as Your Personal Trainer"
 author: "Taedong Yun"
-#date: "Saturday, June 20, 2015"
 output: html_document
 ---
 
-Loding data.
+## Introduction
 
-```{r}
-library(caret)
+In this report, we analyze human activity during physical exercise obtained from wearable sensors. The participants are asked to perform barbell lifts correctly and incorrectly in 5 different ways. Our goal is to determine which of the 5 ways using a machine learning algorithm.
+
+## Loading and Cleaning Data
+
+First let us load the data set.
+
+```{r, results='hide'}
+set.seed(12345)
+suppressMessages(library(caret))
+suppressMessages(library(randomForest))
 training <- read.csv("pml-training.csv")
 testing <- read.csv("pml-testing.csv")
 ```
 
+The first 7 columns of the training and testing data are irrelevant information such as participants' names and timestamps. The data frame also contains some NA values, so we get rid of the columns that contain an NA. This makes sense because we already have a excessive number (160) of variables. We also remove columns whose values are near zero and have little variability. 
 
-```{r}
-#modFit <- train(classe ~ ., data=training, method="rf")
+```{r, cache=TRUE}
+# First 7 columns are irrelevant info.
+training <- training[-(1:7)]
+testing <- testing[-(1:7)]
+nonNACol <- c()
+for (col in names(training)) {
+    if (sum(is.na(training[col])) == 0) {
+        nonNACol <- c(nonNACol, col)
+    }
+}
+cleanTraining <- training[nonNACol]
+nearzerocol <- nearZeroVar(cleanTraining,saveMetrics=TRUE)$nzv
+cleanTraining <- cleanTraining[!nearzerocol]
+usedvars <- names(cleanTraining)
+usedvars <- usedvars[-length(usedvars)]
+preprocessForPrediction <- function(df) { df[usedvars] }
 ```
 
+Note that we reduced the number of variables to 53 from the original 160. Furthermore, we split the training data set into two part, the training set and the validation set.
+
+```{r, cache=TRUE, results='hide'}
+inTrain <- createDataPartition(y=cleanTraining$classe, p=0.5, list=FALSE)
+cleanTrainingSub <- cleanTraining[inTrain,]
+cleanValidationSub <- cleanTraining[-inTrain,]
+```
+
+## Machine Learning Algorithm
+
+We use random forest algorithm for a model fit and prediction. We use the cleaned training data from the previous section and use 3-fold cross-validation in the training control.
+
+```{r, cache=TRUE}
+modFitRFCV <- train(classe ~ ., method="rf", trControl=trainControl(method = "cv", number = 3), data=cleanTrainingSub)
+```
+
+Here are the details of the model fit.
+
+```{r, cache=TRUE}
+print(modFitRFCV)
+```
+
+The final model used for the fit has accuracy `0.9847130` with the error rate 1.5287%. Note that this value is obtained by 3-fold cross-validation.
+
+The most important variables in this random forests are as follows.
+
+```{r, cache=TRUE}
+varImp(modFitRFCV)
+```
+
+Finally we estimate the out-of-sample error rate in the validation set we have created.
+
+```{r, cache=TRUE}
+predvalidation <- predict(modFitRFCV, newdata = cleanValidationSub)
+confusionMatrix(predvalidation, cleanValidationSub$classe)
+```
+
+The accuracy is `0.9892` and the error rate is 1.08%.
+
+## Results
+
+Now we apply the model to the testing data. First we pre-process the testing data and then apply the model to predict the outcome.
+
+```{r, cache=TRUE}
+cleanTesting <- preprocessForPrediction(testing)
+predtesting <- predict(modFitRFCV, newdata = cleanTesting)
+```
+
+Here are the outcomes.
+```{r, cache=TRUE}
+print(predtesting)
+```
