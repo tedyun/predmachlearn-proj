@@ -6,7 +6,7 @@ output: html_document
 
 ## Introduction
 
-In this report, we analyze human activity during physical exercise obtained from wearable sensors. The participants are asked to perform barbell lifts correctly and incorrectly in 5 different ways. Our goal is to determine which of the 5 ways using a machine learning algorithm.
+In this report, we analyze human activity during physical exercise obtained from wearable sensors. The participants are asked to perform barbell lifts correctly and incorrectly in 5 different ways. Our goal is to predict which of the 5 ways the participant performed using the quantitative sensor data.
 
 ## Loading and Cleaning Data
 
